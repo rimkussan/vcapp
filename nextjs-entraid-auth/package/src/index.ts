@@ -1,0 +1,116 @@
+export { EntraIdConfig, EntraIdUser, EntraIdSession, AuthResult, TokenSet, AuthError } from './types';
+
+export { validateConfig, getDefaultConfig, mergeConfig } from './utils/config';
+export { EntraIdClient } from './utils/client';
+export { SessionManager } from './utils/session';
+export { CSRFProtection } from './utils/csrf';
+export { AuthHelpers, createAuthHelpers } from './utils/helpers';
+export { 
+  ClaimsMapper, 
+  defaultClaimMappings, 
+  ClaimMapping, 
+  RoleMapping 
+} from './utils/claims';
+
+export { createAuthMiddleware, AuthMiddlewareOptions } from './middleware/auth';
+export { AuthHandler } from './handlers/auth';
+
+import { NextRequest, NextResponse } from 'next/server';
+import { EntraIdConfig } from './types';
+import { AuthHandler } from './handlers/auth';
+import { createAuthHelpers } from './utils/helpers';
+import { mergeConfig } from './utils/config';
+import { ClaimsMapper, defaultClaimMappings } from './utils/claims';
+
+export interface EntraIdAuthOptions {
+  config: EntraIdConfig;
+  claimsMapper?: ClaimsMapper;
+}
+
+export class EntraIdAuth {
+  private authHandler: AuthHandler;
+  private helpers: AuthHelpers;
+  private config: EntraIdConfig;
+
+  constructor(options: EntraIdAuthOptions) {
+    this.config = mergeConfig(options.config);
+    const claimsMapper = options.claimsMapper || new ClaimsMapper(defaultClaimMappings);
+    
+    this.authHandler = new AuthHandler(this.config, claimsMapper);
+    this.helpers = createAuthHelpers(this.config);
+  }
+
+  get auth() {
+    return this.helpers;
+  }
+
+  async handleAuth(request: NextRequest): Promise<NextResponse> {
+    const { pathname } = request.nextUrl;
+    
+    switch (pathname) {
+      case '/api/auth/signin':
+        return await this.authHandler.handleSignIn(request);
+      case '/api/auth/callback':
+        return await this.authHandler.handleCallback(request);
+      case '/api/auth/signout':
+        return await this.authHandler.handleSignOut(request);
+      case '/api/auth/me':
+        return await this.authHandler.handleMe(request);
+      case '/api/auth/refresh':
+        return await this.authHandler.handleRefresh(request);
+      default:
+        return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+  }
+
+  generateCSRFToken(): string {
+    return this.authHandler.getCSRFToken();
+  }
+}
+
+export function createEntraIdAuth(options: EntraIdAuthOptions): EntraIdAuth {
+  return new EntraIdAuth(options);
+}
+
+export function withAuth<T extends (...args: any[]) => any>(
+  handler: T,
+  config: EntraIdConfig,
+  options?: {
+    requireAuth?: boolean;
+    requiredRoles?: string[];
+    requiredClaims?: Record<string, any>;
+  }
+): T {
+  return (async (...args: Parameters<T>) => {
+    const request = args[0] as NextRequest;
+    const helpers = createAuthHelpers(config);
+
+    if (options?.requireAuth !== false) {
+      const isAuthenticated = await helpers.isAuthenticated(request);
+      if (!isAuthenticated) {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+      }
+    }
+
+    if (options?.requiredRoles) {
+      const hasRole = await helpers.hasAnyRole(options.requiredRoles, request);
+      if (!hasRole) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
+    if (options?.requiredClaims) {
+      const user = await helpers.getUser(request);
+      const hasRequiredClaims = Object.entries(options.requiredClaims).every(
+        ([key, value]) => user?.claims?.[key] === value
+      );
+      if (!hasRequiredClaims) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    }
+
+    return handler(...args);
+  }) as T;
+}
+
+export default EntraIdAuth;
