@@ -1,4 +1,3 @@
-import { jwtDecode } from 'jose';
 import { EntraIdUser } from '../types';
 
 export interface ClaimMapping {

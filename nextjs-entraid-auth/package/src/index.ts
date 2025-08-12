@@ -29,7 +29,7 @@ export interface EntraIdAuthOptions {
 
 export class EntraIdAuth {
   private authHandler: AuthHandler;
-  private helpers: AuthHelpers;
+  private helpers: ReturnType<typeof createAuthHelpers>;
   private config: EntraIdConfig;
 
   constructor(options: EntraIdAuthOptions) {

@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { headers } from 'next/headers';
 import { EntraIdConfig, EntraIdSession, EntraIdUser } from '../types';
 import { SessionManager } from './session';
 
@@ -34,19 +33,9 @@ export class AuthHelpers {
       return await this.sessionManager.getSession(request);
     }
 
-    if (typeof window === 'undefined') {
-      const headersList = headers();
-      const mockRequest = {
-        cookies: {
-          get: (name: string) => {
-            const cookie = headersList.get('cookie')?.split(';')
-              .find(c => c.trim().startsWith(`${name}=`));
-            return cookie ? { value: cookie.split('=')[1] } : undefined;
-          }
-        }
-      } as unknown as NextRequest;
-
-      return await this.sessionManager.getSession(mockRequest);
+    // Server-side usage requires passing the request object
+    if (typeof (globalThis as any).window === 'undefined' && !request) {
+      throw new Error('Request object is required for server-side usage');
     }
 
     return null;
