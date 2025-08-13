@@ -9,7 +9,10 @@
       "Bash(npm run dev:*)",
       "Bash(rm:*)",
       "Bash(cp:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(./launch-demo.sh:*)",
+      "Bash(./fix-windows-access.sh:*)",
+      "Bash(./test-localhost-connection.sh:*)"
     ],
     "deny": []
   }
