@@ -34,13 +34,15 @@ export class AuthHandler {
       const nonce = generators.nonce();
       const csrfToken = this.csrfProtection.generateToken();
 
-      const authUrl = this.client.generateAuthUrl(state);
+      const authUrl = this.client.generateAuthUrl(codeVerifier, state);
 
       const response = NextResponse.redirect(authUrl);
 
+      const isSecure = request.nextUrl.protocol === 'https:' || process.env.NODE_ENV === 'production';
+
       response.cookies.set('oauth_state', state, {
         httpOnly: true,
-        secure: true,
+        secure: isSecure,
         sameSite: 'lax',
         maxAge: 600,
         path: '/'
@@ -48,7 +50,7 @@ export class AuthHandler {
 
       response.cookies.set('oauth_code_verifier', codeVerifier, {
         httpOnly: true,
-        secure: true,
+        secure: isSecure,
         sameSite: 'lax',
         maxAge: 600,
         path: '/'
@@ -56,7 +58,7 @@ export class AuthHandler {
 
       response.cookies.set('oauth_nonce', nonce, {
         httpOnly: true,
-        secure: true,
+        secure: isSecure,
         sameSite: 'lax',
         maxAge: 600,
         path: '/'
@@ -64,7 +66,7 @@ export class AuthHandler {
 
       response.cookies.set('csrf_token', csrfToken, {
         httpOnly: true,
-        secure: true,
+        secure: isSecure,
         sameSite: 'lax',
         maxAge: 3600,
         path: '/'
@@ -84,23 +86,32 @@ export class AuthHandler {
       const state = searchParams.get('state');
       const error = searchParams.get('error');
 
+      console.log('Callback received - code:', !!code, 'state:', !!state, 'error:', error);
+
       if (error) {
-        return NextResponse.redirect(new URL(`/?error=${encodeURIComponent(error)}`, request.url));
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+        return NextResponse.redirect(new URL(`/?error=${encodeURIComponent(error)}`, baseUrl));
       }
 
       if (!code || !state) {
+        console.log('Missing code or state - code:', !!code, 'state:', !!state);
         return NextResponse.json({ error: 'Missing authorization code or state' }, { status: 400 });
       }
 
       const storedState = request.cookies.get('oauth_state')?.value;
       const codeVerifier = request.cookies.get('oauth_code_verifier')?.value;
 
+      console.log('Cookie values - storedState:', !!storedState, 'codeVerifier:', !!codeVerifier);
+      console.log('State match:', storedState === state);
+
       if (!storedState || !codeVerifier || storedState !== state) {
+        console.log('State validation failed - stored:', storedState, 'received:', state);
         return NextResponse.json({ error: 'Invalid state or code verifier' }, { status: 400 });
       }
 
       await this.client.initialize();
 
+      console.log('About to exchange code for tokens with state:', state);
       const tokenSet: TokenSet = await this.client.exchangeCodeForTokens(code, codeVerifier, state);
 
       const userInfo = await this.client.getUserInfo(tokenSet.access_token);
@@ -109,7 +120,8 @@ export class AuthHandler {
       if (this.config.isMultiTenant && this.config.allowedTenants) {
         const userTenantId = user.tenantId;
         if (userTenantId && !this.config.allowedTenants.includes(userTenantId)) {
-          return NextResponse.redirect(new URL('/?error=tenant_not_allowed', request.url));
+          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+          return NextResponse.redirect(new URL('/?error=tenant_not_allowed', baseUrl));
         }
       }
 
@@ -123,7 +135,8 @@ export class AuthHandler {
 
       const sessionToken = await this.sessionManager.createSession(session);
 
-      const response = NextResponse.redirect(new URL('/', request.url));
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      const response = NextResponse.redirect(new URL('/', baseUrl));
       this.sessionManager.setSessionCookie(response, sessionToken);
 
       response.cookies.set('oauth_state', '', { maxAge: 0 });
@@ -133,7 +146,8 @@ export class AuthHandler {
       return response;
     } catch (error) {
       console.error('Callback error:', error);
-      return NextResponse.redirect(new URL('/?error=authentication_failed', request.url));
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      return NextResponse.redirect(new URL('/?error=authentication_failed', baseUrl));
     }
   }
 
@@ -141,7 +155,8 @@ export class AuthHandler {
     try {
       const session = await this.sessionManager.getSession(request);
       
-      const response = NextResponse.redirect(new URL('/', request.url));
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      const response = NextResponse.redirect(new URL('/', baseUrl));
       this.sessionManager.clearSessionCookie(response);
 
       if (session?.idToken) {
@@ -152,7 +167,8 @@ export class AuthHandler {
       return response;
     } catch (error) {
       console.error('SignOut error:', error);
-      const response = NextResponse.redirect(new URL('/', request.url));
+      const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+      const response = NextResponse.redirect(new URL('/', baseUrl));
       this.sessionManager.clearSessionCookie(response);
       return response;
     }

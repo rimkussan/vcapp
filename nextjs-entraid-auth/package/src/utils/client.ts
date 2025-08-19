@@ -27,12 +27,11 @@ export class EntraIdClient {
     });
   }
 
-  generateAuthUrl(state?: string): string {
+  generateAuthUrl(codeVerifier: string, state?: string): string {
     if (!this.client) {
       throw new Error('Client not initialized. Call initialize() first.');
     }
 
-    const codeVerifier = generators.codeVerifier();
     const codeChallenge = generators.codeChallenge(codeVerifier);
 
     const authUrl = this.client.authorizationUrl({
@@ -50,9 +49,23 @@ export class EntraIdClient {
       throw new Error('Client not initialized. Call initialize() first.');
     }
 
+    console.log('exchangeCodeForTokens called with:', {
+      code: !!code,
+      codeVerifier: !!codeVerifier,
+      state: !!state,
+      redirectUri: this.config.redirectUri
+    });
+
+    const params = { code };
+    if (state) {
+      (params as any).state = state;
+    }
+
+    console.log('Calling client.callback with params:', params);
+
     const tokenSet = await this.client.callback(
       this.config.redirectUri,
-      { code, state },
+      params,
       { code_verifier: codeVerifier }
     );
 

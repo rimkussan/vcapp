@@ -22,11 +22,10 @@ class EntraIdClient {
             response_types: ['code'],
         });
     }
-    generateAuthUrl(state) {
+    generateAuthUrl(codeVerifier, state) {
         if (!this.client) {
             throw new Error('Client not initialized. Call initialize() first.');
         }
-        const codeVerifier = openid_client_1.generators.codeVerifier();
         const codeChallenge = openid_client_1.generators.codeChallenge(codeVerifier);
         const authUrl = this.client.authorizationUrl({
             scope: this.config.scopes?.join(' ') || 'openid profile email',
@@ -40,7 +39,18 @@ class EntraIdClient {
         if (!this.client) {
             throw new Error('Client not initialized. Call initialize() first.');
         }
-        const tokenSet = await this.client.callback(this.config.redirectUri, { code, state }, { code_verifier: codeVerifier });
+        console.log('exchangeCodeForTokens called with:', {
+            code: !!code,
+            codeVerifier: !!codeVerifier,
+            state: !!state,
+            redirectUri: this.config.redirectUri
+        });
+        const params = { code };
+        if (state) {
+            params.state = state;
+        }
+        console.log('Calling client.callback with params:', params);
+        const tokenSet = await this.client.callback(this.config.redirectUri, params, { code_verifier: codeVerifier });
         return {
             access_token: tokenSet.access_token,
             refresh_token: tokenSet.refresh_token,

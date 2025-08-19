@@ -12,7 +12,10 @@
       "Bash(chmod:*)",
       "Bash(./launch-demo.sh:*)",
       "Bash(./fix-windows-access.sh:*)",
-      "Bash(./test-localhost-connection.sh:*)"
+      "Bash(./test-localhost-connection.sh:*)",
+      "Bash(PORT=3000 npm run dev -- --hostname 0.0.0.0 --port 3000)",
+      "Bash(fuser:*)",
+      "Bash(npm install:*)"
     ],
     "deny": []
   }

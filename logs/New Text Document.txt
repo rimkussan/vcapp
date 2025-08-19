@@ -1,0 +1,1 @@
+I checked solution proposed by AI regarding failover page. It doesn't work. I'm testing other options.
