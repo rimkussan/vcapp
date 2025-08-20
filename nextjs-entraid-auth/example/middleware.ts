@@ -5,6 +5,12 @@ export default auth((req) => {
   const isAuth = !!req.auth
   const isAuthPage = req.nextUrl.pathname.startsWith("/auth")
 
+  // Protect /dashboard route
+  if (req.nextUrl.pathname.startsWith("/dashboard") && !isAuth) {
+    const newUrl = new URL("/auth/signin", req.nextUrl.origin)
+    return NextResponse.redirect(newUrl)
+  }
+
   // Protect /protected routes
   if (req.nextUrl.pathname.startsWith("/protected") && !isAuth) {
     const newUrl = new URL("/auth/signin", req.nextUrl.origin)
