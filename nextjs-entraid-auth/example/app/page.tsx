@@ -30,8 +30,19 @@ export default async function Home() {
               <h3 className="font-semibold mb-2">✅ Authenticated</h3>
               <p className="text-sm">Welcome, {session.user?.name || session.user?.email}!</p>
               {session.user?.email && (
-                <p className="text-xs text-gray-600 mt-1">{session.user.email}</p>
+                <p className="text-xs text-gray-600 mt-1">📧 {session.user.email}</p>
               )}
+              {(session.user as any)?.jobTitle && (
+                <p className="text-xs text-gray-600 mt-1">💼 {(session.user as any).jobTitle}</p>
+              )}
+              {(session.user as any)?.department && (
+                <p className="text-xs text-gray-600 mt-1">🏢 {(session.user as any).department}</p>
+              )}
+              <p className="text-xs text-gray-600 mt-1">
+                👤 Role: {(session.user as any)?.roles && (session.user as any).roles.length > 0 
+                  ? (session.user as any).roles.join(', ') 
+                  : 'Not set'}
+              </p>
             </div>
             
             <div className="flex gap-4 justify-center flex-wrap">

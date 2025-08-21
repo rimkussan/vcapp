@@ -61,6 +61,26 @@ export default async function DashboardPage() {
               <label className="block text-sm font-medium text-gray-500">Email</label>
               <p className="mt-1 text-lg">{user?.email || "Not provided"}</p>
             </div>
+            {(user as any)?.jobTitle && (
+              <div>
+                <label className="block text-sm font-medium text-gray-500">Job Title</label>
+                <p className="mt-1 text-lg">{(user as any).jobTitle}</p>
+              </div>
+            )}
+            {(user as any)?.department && (
+              <div>
+                <label className="block text-sm font-medium text-gray-500">Department</label>
+                <p className="mt-1 text-lg">{(user as any).department}</p>
+              </div>
+            )}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-500">Role</label>
+              <p className="mt-1 text-lg">
+                {(user as any)?.roles && (user as any).roles.length > 0 
+                  ? (user as any).roles.join(', ') 
+                  : 'Not set'}
+              </p>
+            </div>
           </div>
         </div>
 
