@@ -47,16 +47,31 @@ export class EntraIdAuth {
   async handleAuth(request: NextRequest): Promise<NextResponse> {
     const { pathname } = request.nextUrl;
     
-    switch (pathname) {
-      case '/api/auth/signin':
+    // Extract the action from the pathname (handles both exact paths and dynamic routes)
+    // For dynamic routes like /api/auth/[...auth], extract the first segment after /api/auth/
+    const pathSegments = pathname.split('/').filter(segment => segment !== '');
+    let action = '';
+    
+    if (pathSegments.length >= 3 && pathSegments[0] === 'api' && pathSegments[1] === 'auth') {
+      action = pathSegments[2];
+    } else {
+      // Fallback for exact path matching
+      const actionMatch = pathname.match(/^\/api\/auth\/(.+?)(?:\/|$)/);
+      if (actionMatch) {
+        action = actionMatch[1];
+      }
+    }
+    
+    switch (action) {
+      case 'signin':
         return await this.authHandler.handleSignIn(request);
-      case '/api/auth/callback':
+      case 'callback':
         return await this.authHandler.handleCallback(request);
-      case '/api/auth/signout':
+      case 'signout':
         return await this.authHandler.handleSignOut(request);
-      case '/api/auth/me':
+      case 'me':
         return await this.authHandler.handleMe(request);
-      case '/api/auth/refresh':
+      case 'refresh':
         return await this.authHandler.handleRefresh(request);
       default:
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
