@@ -1,53 +1,18 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
-
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  roles?: string[];
-}
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 export default function AuthButton() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const { data: session, status } = useSession();
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const data = await response.json();
-        setUser(data.user);
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignIn = () => {
-    window.location.href = '/api/auth/signin';
-  };
-
-  const handleSignOut = () => {
-    window.location.href = '/api/auth/signout';
-  };
-
-  if (loading) {
+  if (status === 'loading') {
     return (
       <div className="animate-pulse bg-gray-200 rounded-md h-10 w-24"></div>
     );
   }
 
-  if (user) {
+  if (session?.user) {
+    const user = session.user as any;
     return (
       <div className="flex items-center gap-4">
         <div className="text-sm">
@@ -58,9 +23,14 @@ export default function AuthButton() {
               Roles: {user.roles.join(', ')}
             </p>
           )}
+          {user.jobTitle && (
+            <p className="text-xs text-gray-500">
+              {user.jobTitle}
+            </p>
+          )}
         </div>
         <button
-          onClick={handleSignOut}
+          onClick={() => signOut()}
           className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
         >
           Sign Out
@@ -71,7 +41,7 @@ export default function AuthButton() {
 
   return (
     <button
-      onClick={handleSignIn}
+      onClick={() => signIn('microsoft-entra-id')}
       className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
     >
       Sign In
