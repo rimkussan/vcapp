@@ -1,6 +1,7 @@
 'use client';
 
 import { useSession, signIn, signOut } from 'next-auth/react';
+import { isPersonalAccount } from '@/config/role-mappings';
 
 export default function AuthButton() {
   const { data: session, status } = useSession();
@@ -13,19 +14,41 @@ export default function AuthButton() {
 
   if (session?.user) {
     const user = session.user as any;
+    
+    // Debug logging
+    console.log('User session data:', {
+      email: user.email,
+      roles: user.roles,
+      isPersonalAccount: user.isPersonalAccount
+    });
+    
     return (
       <div className="flex items-center gap-4">
         <div className="text-sm">
-          <p className="font-medium">{user.name}</p>
-          <p className="text-gray-600">{user.email}</p>
-          {user.roles && user.roles.length > 0 && (
+          <p className="font-medium">TEST_CHANGE {user.name}</p>
+          <p className="text-gray-600">EMAIL: {user.email}</p>
+          <p className="text-red-500 font-bold">DEBUG: isPersonalAccount = {String(user.isPersonalAccount)}</p>
+          {user.roles && user.roles.length > 0 ? (
             <p className="text-xs text-blue-600">
               Roles: {user.roles.join(', ')}
+            </p>
+          ) : user.isPersonalAccount ? (
+            <p className="text-xs text-orange-600">
+              Roles: Can't access for personal subscription
+            </p>
+          ) : (
+            <p className="text-xs text-gray-500">
+              Roles: Not assigned (isPersonalAccount: {String(user.isPersonalAccount)})
             </p>
           )}
           {user.jobTitle && (
             <p className="text-xs text-gray-500">
-              {user.jobTitle}
+              Job Title: {user.jobTitle}
+            </p>
+          )}
+          {user.department && (
+            <p className="text-xs text-gray-500">
+              Department: {user.department}
             </p>
           )}
         </div>
