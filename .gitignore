@@ -27,7 +27,8 @@ Thumbs.db
 ehthumbs.db
 desktop.ini
 
-# Node.js
+# Node.js - ALL subdirectories
+**/node_modules/
 node_modules/
 npm-debug.log*
 yarn-debug.log*
@@ -39,7 +40,18 @@ yarn-error.log*
 !.yarn/releases
 !.yarn/versions
 
-# Build outputs and cache
+# Package manager lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs and cache - ALL subdirectories
+**/dist/
+**/build/
+**/.next/
+**/.nuxt/
+**/out/
+**/coverage/
 dist/
 build/
 .next/
