@@ -23,6 +23,15 @@ yarn add @entraid/nextjs-auth
 pnpm add @entraid/nextjs-auth
 ```
 
+## 📚 Complete Documentation
+
+For comprehensive setup instructions, configuration examples, and deployment guidance:
+
+- **[📖 Implementation Guide](../IMPLEMENTATION-GUIDE.md)** - Complete step-by-step tutorial
+- **[⚙️ Configuration Examples](../CONFIGURATION-EXAMPLES.md)** - All scenarios with code examples
+- **[✅ Deployment Checklist](../DEPLOYMENT-CHECKLIST.md)** - Production-ready checklist
+- **[🎯 Working Example](example/)** - Live demo with source code
+
 ## 🏃‍♂️ Quick Start
 
 ### 1. Environment Variables
