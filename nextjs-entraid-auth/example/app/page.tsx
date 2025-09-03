@@ -100,7 +100,7 @@ export default async function Home() {
 
         <div className="mt-8 text-xs text-gray-500">
           <a 
-            href="https://github.com/your-org/nextjs-entraid-auth"
+            href="https://github.com/rimkussan/vcapp"
             className="hover:text-gray-700"
             target="_blank"
             rel="noopener noreferrer"
