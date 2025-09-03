@@ -206,6 +206,74 @@ openssl rand -base64 32
    }
    ```
 
+### Step 5: Assign Users and Groups to App Roles
+
+**⚠️ Critical Step:** After creating app roles, you must assign users or groups to these roles. Without this step, users won't have any roles in their tokens.
+
+1. **Navigate to Enterprise Application**
+   - Go to Azure Portal → **Enterprise applications**
+   - Search for your application name (e.g., "MyApp-Development")
+   - Click on your application
+
+2. **Access Users and Groups**
+   - In the left sidebar, click **"Users and groups"**
+   - Click **"Add user/group"**
+
+3. **Assign Individual Users**
+   ```
+   Step 1: Click "Users" → Select user(s) from your organization
+   Step 2: Click "Select role" → Choose from your app roles:
+           - Administrator
+           - User
+           - [Any other roles you created]
+   Step 3: Click "Assign"
+   ```
+
+4. **Assign Groups (Recommended for Scale)**
+   ```
+   Step 1: Click "Groups" → Select security group(s)
+   Step 2: Click "Select role" → Choose appropriate role for the group
+   Step 3: Click "Assign"
+   
+   Examples:
+   - "IT Admins" group → Administrator role
+   - "All Employees" group → User role
+   - "Managers" group → Manager role (if created)
+   ```
+
+5. **Verify Assignments**
+   - Return to **"Users and groups"** section
+   - You should see your assigned users/groups with their roles
+   - **Important:** Changes may take a few minutes to propagate
+
+### Step 6: Test Role Assignment
+
+1. **Test with Assigned User**
+   - Sign in to your application with an assigned user
+   - Check that roles appear in the user session
+   - Verify role-based features work correctly
+
+2. **Test with Unassigned User**
+   - Sign in with a user who hasn't been assigned any roles
+   - Should see "No roles assigned" or appropriate unauthorized message
+   - This confirms role-based access control is working
+
+**📝 Important Notes:**
+- **Personal Microsoft Accounts:** Don't support app roles (limitation by design)
+- **Role Propagation:** May take 5-10 minutes after assignment
+- **Token Claims:** Roles appear in the `roles` claim in the access token
+- **Group Membership:** If using groups, ensure users are members of assigned groups
+
+**🔍 Troubleshooting Role Assignment:**
+```bash
+# If roles aren't appearing in tokens:
+1. Verify user/group is assigned to app role in Enterprise Application
+2. Check if user is member of assigned group (if using group assignment)
+3. Wait 5-10 minutes for changes to propagate
+4. Clear browser cache and sign out/in again
+5. Check token content in browser developer tools (JWT decode)
+```
+
 ---
 
 ## ⚙️ Configuration Examples
@@ -974,14 +1042,21 @@ vercel --prod
 
 ### Testing Checklist
 
+**⚠️ Prerequisites for Role-Based Testing:**
+Before testing role-based features, ensure you have:
+1. **Created app roles** in Azure App Registration (Step 4)
+2. **Assigned users to roles** in Enterprise Application (Step 5) - **This is critical!**
+3. **Waited 5-10 minutes** for role assignments to propagate
+
 ```bash
 ✅ Homepage loads correctly
 ✅ Sign In with Microsoft button works
 ✅ Successful authentication redirects to homepage
 ✅ User information displays correctly
-✅ Protected page shows unauthorized for users without roles
-✅ Protected page shows user details for users with roles
-✅ Admin page works with proper role validation
+✅ User assigned to roles: Protected page shows user details
+✅ User without role assignment: Protected page shows unauthorized
+✅ User with admin role: Admin page shows admin dashboard
+✅ User without admin role: Admin page shows unauthorized
 ✅ Sign out functionality works
 ✅ Error handling works correctly
 ```
